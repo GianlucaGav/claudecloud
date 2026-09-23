@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meta TFT</title>
+  <meta name="description" content="Las mejores composiciones del meta actual de Teamfight Tactics según partidas reales de alto elo, con estadística bayesiana y calculadora de probabilidades de tienda.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Cpath d='M9 22V10h14v3h-5v9h-4v-9H9z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <a class="brand" href="#/comps"><span class="brand-mark" aria-hidden="true">TFT</span>Meta TFT</a>
+      <nav class="tabs" aria-label="Secciones">
+        <a href="#/comps" data-route="comps">Composiciones</a>
+        <a href="#/calc" data-route="calc">Calculadora<span class="long"> de roll</span></a>
+        <a href="#/metodo" data-route="metodo">Metodología</a>
+      </nav>
+      <div class="theme-slot">
+        <button class="icon-btn" id="theme-btn" type="button" aria-label="Cambiar tema"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="view">
+    <p class="muted" style="padding:40px 0">Cargando datos…</p>
+  </main>
+
+  <footer class="wrap">
+    <p>Datos: API oficial de Riot Games (partidas clasificatorias de alto elo) y CommunityDragon (nombres e iconos).
+      Meta TFT no está respaldado por Riot Games y no refleja las opiniones de Riot Games ni de nadie oficialmente
+      involucrado en la producción o gestión de las propiedades de Riot Games. Riot Games y todas las propiedades
+      asociadas son marcas comerciales o registradas de Riot Games, Inc.</p>
+  </footer>
+
+  <div id="tooltip" role="tooltip" hidden></div>
+</body>
+</html>

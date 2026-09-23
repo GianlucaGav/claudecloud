@@ -1,0 +1,28 @@
+{
+  "_nota": "Probabilidades de tienda (% por coste 1-5) y tamaño del pool. Revísalo si Riot cambia los valores en un parche: la calculadora de la web los usa y también permite editarlos en el momento.",
+  "shopOdds": {
+    "1": [100, 0, 0, 0, 0],
+    "2": [100, 0, 0, 0, 0],
+    "3": [75, 25, 0, 0, 0],
+    "4": [55, 30, 15, 0, 0],
+    "5": [45, 33, 20, 2, 0],
+    "6": [30, 40, 25, 5, 0],
+    "7": [19, 30, 40, 10, 1],
+    "8": [18, 25, 32, 22, 3],
+    "9": [10, 20, 25, 35, 10],
+    "10": [5, 10, 20, 40, 25],
+    "11": [1, 2, 12, 50, 35]
+  },
+  "copiesPerChampion": { "1": 30, "2": 25, "3": 18, "4": 10, "5": 9 },
+  "championsPerCostFallback": { "1": 13, "2": 13, "3": 13, "4": 12, "5": 8 },
+  "rerollCost": 2,
+  "lpByPlacement": [40, 30, 20, 10, -10, -20, -30, -40],
+  "priorStrength": 25,
+  "tiers": [
+    { "tier": "S", "maxAvg": 4.1 },
+    { "tier": "A", "maxAvg": 4.3 },
+    { "tier": "B", "maxAvg": 4.5 },
+    { "tier": "C", "maxAvg": 4.7 },
+    { "tier": "D", "maxAvg": 99 }
+  ]
+}
