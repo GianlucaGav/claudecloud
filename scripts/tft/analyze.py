@@ -123,7 +123,7 @@ class Board:
         self.augments = raw.get("a") or []
         self.cluster = None
 
-        # Carry = más peso ofensivo en objetos; desempate por estrellas y coste.
+        # Carry = más peso ofensivo en objetos; desempate por estrellas y nº de objetos.
         scored = []
         for u in self.units:
             off = sum(weights(i)[0] for i in u[2])
@@ -140,7 +140,7 @@ class Board:
         by_def = sorted(scored, key=lambda s: (s[1], s[2][1]), reverse=True)
         self.tank = by_def[0][2][0] if by_def and by_def[0][1] >= 1.4 else None
         if self.carry is None and self.units:
-            # Sin objetos claros: la unidad más cara y con más estrellas.
+            # Sin objetos ofensivos claros: la unidad con más objetos y estrellas.
             best = max(self.units, key=lambda u: (len(u[2]), u[1]))
             self.carry, self.carry_unit = best[0], best
 
