@@ -83,7 +83,11 @@ def prune(matches: dict, days: int) -> dict:
 
 def fetch(matches: dict, cfg: dict) -> str | None:
     """Descarga partidas nuevas. Devuelve un mensaje de error o None."""
-    client = riot.RiotClient(os.environ["RIOT_API_KEY"], log=log)
+    key = riot.clean_key(os.environ["RIOT_API_KEY"])
+    warning = riot.key_format_warning(key)
+    if warning:
+        log(warning)
+    client = riot.RiotClient(key, log=log)
     platforms = [p for p in cfg["platforms"] if p in riot.PLATFORM_REGION]
     unknown = set(cfg["platforms"]) - set(platforms)
     if unknown:

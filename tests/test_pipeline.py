@@ -225,6 +225,12 @@ class RiotClientTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.server.shutdown()
 
+    def setUp(self):
+        # El servidor se comparte entre tests: cada uno empieza con contadores limpios.
+        with self.fake.lock:
+            self.fake.hits.clear()
+            self.fake.throttled.clear()
+
     def env(self, key="RGAPI-test"):
         return {
             "RIOT_API_KEY": key, "RIOT_API_BASE": self.base, "TFT_PLATFORMS": "euw1",
@@ -252,6 +258,23 @@ class RiotClientTest(unittest.TestCase):
             self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
             after = sum(1 for h in self.fake.hits if "/matches/EUW1_" in h)
             self.assertEqual(before, after)
+
+    def test_clave_pegada_con_comillas_y_espacios(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            static = tmp / "cdragon.json"
+            static.write_text(json.dumps(synth.cdragon_json()), encoding="utf-8")
+            res = run_update(["--static", str(static), "--cache", str(tmp / "c.json.gz"), "--out", str(tmp / "m.json")],
+                             self.env(key=' "RGAPI-test"\n'))
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            self.assertIn("formato habitual", res.stdout)
+
+    def test_mensajes_de_error_de_clave(self):
+        self.assertIn("no reconoce", riot.auth_error_message(401, "Unknown apikey"))
+        self.assertIn("Unknown apikey", riot.auth_error_message(401, "Unknown apikey"))
+        self.assertIn("caducado", riot.auth_error_message(403))
+        self.assertIsNone(riot.key_format_warning("RGAPI-0a1b2c3d-1234-5678-9abc-def012345678"))
+        self.assertIn("NO empieza", riot.key_format_warning("0a1b2c3d"))
 
     def test_clave_invalida(self):
         with tempfile.TemporaryDirectory() as tmp:
