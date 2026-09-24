@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 import time
 from collections import deque
@@ -77,6 +78,42 @@ def parse_limits(header: str | None, margin: float = 0.9):
     return limits or None
 
 
+def _riot_message(err: HTTPError) -> str:
+    """Texto de 'status.message' que devuelve Riot en los errores (p. ej. 'Unknown apikey')."""
+    try:
+        return json.loads(err.read().decode("utf-8", "replace")).get("status", {}).get("message", "")
+    except (ValueError, AttributeError, OSError):
+        return ""
+
+
+def auth_error_message(code: int, detail: str = "") -> str:
+    extra = f" «{detail}»" if detail else ""
+    if code == 401:
+        return (
+            f"La API de Riot no reconoce la clave (401{extra}). Revisa que el secret RIOT_API_KEY sea "
+            "exactamente la clave RGAPI-… del portal, sin texto extra. Si es de un producto "
+            "(Personal API Key) todavía pendiente de aprobación, no funciona hasta que Riot lo apruebe: "
+            "mientras tanto usa la Development API Key de developer.riotgames.com."
+        )
+    return (
+        f"La API de Riot rechaza la clave (403{extra}): lo normal es que haya caducado (las claves de "
+        "desarrollo duran 24 h). Regénérala en developer.riotgames.com y actualiza el secret RIOT_API_KEY."
+    )
+
+
+def clean_key(raw: str) -> str:
+    """Quita espacios, saltos de línea y comillas que se cuelan al pegar la clave."""
+    return raw.strip().strip("\"'").strip()
+
+
+def key_format_warning(key: str) -> str | None:
+    if re.fullmatch(r"RGAPI-[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", key):
+        return None
+    starts = "empieza" if key.startswith("RGAPI-") else "NO empieza"
+    return (f"Aviso: la clave no tiene el formato habitual (RGAPI- seguido de 36 caracteres): "
+            f"tiene {len(key)} caracteres y {starts} por RGAPI-.")
+
+
 class RiotClient:
     def __init__(self, api_key: str, base: str | None = None, log=print):
         self.api_key = api_key
@@ -113,10 +150,7 @@ class RiotClient:
                 if err.code == 404:
                     return None
                 if err.code in (401, 403):
-                    raise RiotAuthError(
-                        f"La API de Riot respondió {err.code}: la clave RIOT_API_KEY no es válida o ha caducado "
-                        "(las claves de desarrollo caducan cada 24 h)."
-                    ) from err
+                    raise RiotAuthError(auth_error_message(err.code, _riot_message(err))) from err
                 if err.code == 429:
                     retry = float(err.headers.get("Retry-After") or 0) or 5.0 * (attempt + 1)
                     self.log(f"  429 en {host}; esperando {retry:.0f}s")

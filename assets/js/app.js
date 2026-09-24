@@ -289,7 +289,7 @@ function heroHTML() {
       <div class="sample">
         <span><b>${fmt(s.matches)}</b> partidas</span>
         <span><b>${fmt(s.boards)}</b> tableros (${pct(s.assigned / s.boards)} agrupados en composiciones)</span>
-        <span>Versión ${esc((s.versions || []).join(', '))}</span>
+        ${(s.versions || []).some((v) => v !== '?') ? `<span>Versión ${esc(s.versions.filter((v) => v !== '?').join(', '))}</span>` : ''}
         <span>${esc(tiers)}${platforms ? ` · ${esc(platforms)}` : ''}</span>
         ${days ? `<span>${esc(days)}</span>` : ''}
         <span class="${stale ? 'stale' : ''}">Actualizado ${esc(ageText(m.generated_at))}${stale ? ' (¿ha fallado el Action?)' : ''}</span>
