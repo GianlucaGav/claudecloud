@@ -108,6 +108,11 @@ class UnitTest(unittest.TestCase):
         self.assertEqual(len(cm["b"]), 8)
         self.assertNotIn("puuid", json.dumps(cm))
 
+    def test_version_con_campo_camel_case(self):
+        m = synth.generate(1, seed=1)[0]
+        m["info"]["gameVersion"] = m["info"].pop("game_version")
+        self.assertEqual(an.compact_match(m)["v"], "16.19")
+
     def test_select_matches_mezcla_parches_si_falta_muestra(self):
         old = [an.compact_match(m) for m in synth.generate(20, seed=2, version="16.18")]
         new = [an.compact_match(m) for m in synth.generate(10, seed=3, version="16.19")]

@@ -35,7 +35,9 @@ def compact_match(m: dict, platform: str | None = None) -> dict | None:
         match_id = m["metadata"]["match_id"]
     except (KeyError, TypeError):
         return None
-    ver = re.search(r"(\d+)\.(\d+)", info.get("game_version", ""))
+    # El nombre del campo ha cambiado entre versiones de la API.
+    raw_ver = next((str(info[k]) for k in ("game_version", "gameVersion", "game_version_string") if info.get(k)), "")
+    ver = re.search(r"(\d+)\.(\d+)", raw_ver)
     boards = []
     for p in info.get("participants", []):
         boards.append({
