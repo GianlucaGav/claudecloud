@@ -1,0 +1,106 @@
+name: Actualizar meta TFT
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # cada 6 horas
+  workflow_dispatch:
+    inputs:
+      max_new_matches:
+        description: "Partidas nuevas por plataforma (más = más lento; ~1,3 s por partida con clave personal)"
+        default: "400"
+  push:
+    branches: [main]
+    paths: ["index.html", "assets/**", "data/game-config.json", "data/demo/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: tft-meta
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restaurar caché de partidas
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/tft
+          key: tft-matches-${{ github.run_id }}
+          restore-keys: tft-matches-
+
+      - name: Descargar y analizar partidas
+        env:
+          RIOT_API_KEY: ${{ secrets.RIOT_API_KEY }}
+          TFT_PLATFORMS: ${{ vars.TFT_PLATFORMS || 'euw1,kr,na1' }}
+          TFT_TIERS: ${{ vars.TFT_TIERS || 'challenger,grandmaster,master' }}
+          TFT_PLAYERS_PER_PLATFORM: ${{ vars.TFT_PLAYERS_PER_PLATFORM || '120' }}
+          TFT_MAX_NEW_MATCHES: ${{ inputs.max_new_matches || vars.TFT_MAX_NEW_MATCHES || '400' }}
+          TFT_LANG: ${{ vars.TFT_LANG || 'es_es' }}
+        run: |
+          if [ -z "$RIOT_API_KEY" ]; then
+            echo "::error::Falta el secret RIOT_API_KEY (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+          python3 scripts/update_meta.py
+
+      - name: Guardar caché de partidas
+        if: always() && hashFiles('.cache/tft/*') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/tft
+          key: tft-matches-${{ github.run_id }}
+
+      - name: Publicar data/meta.json en el repositorio
+        if: always()
+        run: |
+          if [ -z "$(git status --porcelain -- data/meta.json)" ]; then
+            echo "Sin cambios en data/meta.json"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/meta.json
+          git commit -m "Actualizar meta TFT ($(date -u +%Y-%m-%dT%H:%MZ))"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+  # Publica la web en GitHub Pages. Actívalo creando la variable de repositorio
+  # DEPLOY_PAGES=true y eligiendo Settings → Pages → Source: "GitHub Actions".
+  deploy:
+    needs: update
+    if: ${{ !cancelled() && vars.DEPLOY_PAGES == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }} # incluye el commit de datos recién hecho
+
+      - name: Preparar la web
+        run: |
+          mkdir _site
+          cp -r index.html assets data _site/
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
